@@ -4,6 +4,7 @@
 
 const Botkit = require('botkit');
 const winston = require('winston');
+const url = require('url');
 
 if (!process.env.slackToken || !process.env.ticketSystemUrl) {
   winston.log('error', 'You need to provide the slackToken and ticketSystemUrl as env vars.');
@@ -29,5 +30,6 @@ controller.spawn({
 
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Sending reply...');
-  bot.reply(message, `${connectionInfo.ticketSystemUrl}${message.match[1]}`);
+  bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, message.match[1]));
+  // `${connectionInfo.ticketSystemUrl}${message.match[1]}`
 });

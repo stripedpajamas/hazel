@@ -5,11 +5,19 @@
 const Botkit = require('botkit');
 const winston = require('winston');
 const url = require('url');
+const http = require('http');
 
 if (!process.env.slackToken || !process.env.ticketSystemUrl) {
   winston.log('error', 'You need to provide the slackToken and ticketSystemUrl as env vars.');
   process.exit();
 }
+
+if (process.env.PORT) {
+  http.createServer((req, res) => {
+    res.end('Hazel says hi! Go to https://github.com/stripedpajamas/hazel for more info.');
+  }).listen(process.env.PORT);
+}
+
 const connectionInfo = {
   slackToken: process.env.slackToken,
   ticketSystemUrl: process.env.ticketSystemUrl,

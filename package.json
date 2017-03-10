@@ -17,5 +17,9 @@
   "dependencies": {
     "botkit": "^0.5.1",
     "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
   }
 }

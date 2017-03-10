@@ -39,7 +39,7 @@ const quotes = [
   'He who doesn’t clean his mouth before breakfast always complains that the food is sour. ',
   'Man is like a pepper, till you have chewed it you do not know how hot it is.',
   'A spider’s cobweb isn’t only its sleeping spring but also its food trap.',
-  'If you are looking for a fly in your food it means that you are full. ,' +
+  'If you are looking for a fly in your food it means that you are full.',
   'When your luck deserts you, even cold food burns.',
   'They ate our food, and forgot our names.',
 ];

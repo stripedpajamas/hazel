@@ -42,7 +42,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, message.match[1]));
 });
 
-controller.hears(['quote'], ['direct_mention'], (bot, message) => {
+controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, message) => {
   winston.log('info', 'Hazel heard someone mention her directly. Sending reply...');
   bot.reply(message, quotes.getRandomQuote());
 });

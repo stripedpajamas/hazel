@@ -3,7 +3,7 @@
  */
 
 const expect = require('chai').expect;
-const quotes = require('../quotes');
+const quotes = require('../lib/quotes');
 
 describe('quotes', () => {
   describe('#getRandomQuote', () => {

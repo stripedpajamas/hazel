@@ -61,24 +61,47 @@ startHazel();
 
 
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
-  winston.log('info', 'Hazel heard a ticket # pattern. Calling FreshService API for details...');
+  winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
   const ticketID = message.match[1];
   if (process.env.ticketSystemAPIKey) {
+    winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
     const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
     request(reqOptions, (err, res, body) => {
+      winston.log('debug', 'Just sent request to FreshService.');
       if (err || res.statusCode !== 200) {
         winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
         bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
       } else {
+        winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
         const ticketInfoMessage = {
           attachments: [{
-            title: body.helpdesk_ticket.subject,
+            title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
             title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
             fields: [
               {
-                title: 'Description:',
-                value: body.helpdesk_ticket.description_html || body.helpdesk_ticket.description,
+                title: 'Description',
+                value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
                 short: false,
+              },
+              {
+                title: 'Requester',
+                value: body.helpdesk_ticket.requester_name,
+                short: true,
+              },
+              {
+                title: 'Agent',
+                value: body.helpdesk_ticket.responder_name,
+                short: true,
+              },
+              {
+                title: 'Status',
+                value: body.helpdesk_ticket.status_name,
+                short: true,
+              },
+              {
+                title: 'Priority',
+                value: body.helpdesk_ticket.priority_name,
+                short: true,
               },
             ],
           }],
@@ -87,6 +110,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
       }
     });
   } else {
+    winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
     bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
   }
 });

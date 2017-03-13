@@ -2,63 +2,97 @@
  * Created by petersquicciarini on 3/9/17.
  */
 
-const Botkit = require('botkit');
 const winston = require('winston');
+
+if (!process.env.slackClientID || !process.env.slackClientSecret ||
+  !process.env.ticketSystemUrl || !process.env.PORT || !process.env.mongoUri) {
+  winston.log('error', 'Please see README for required env vars.');
+  process.exit();
+}
+
+const Botkit = require('botkit');
+const mongoStorage = require('botkit-storage-mongo')({ mongoUri: process.env.mongoUri });
 const url = require('url');
-const http = require('http');
 const quotes = require('./lib/quotes');
 const freshservice = require('./lib/freshservice');
 const request = require('request');
 
-if (!process.env.slackToken || !process.env.ticketSystemUrl) {
-  winston.log('error', 'You need to provide the slackToken and ticketSystemUrl as env vars.');
-  process.exit();
-}
-
-if (process.env.PORT) {
-  http.createServer((req, res) => {
-    res.end('Hazel says hi! Go to https://github.com/stripedpajamas/hazel for more info.');
-  }).listen(process.env.PORT);
-}
-
 const connectionInfo = {
-  slackToken: process.env.slackToken,
+  slackClientID: process.env.slackClientID,
+  slackClientSecret: process.env.slackClientSecret,
   ticketSystemUrl: process.env.ticketSystemUrl,
   ticketSystemAPIKey: process.env.ticketSystemAPIKey,
 };
 const controller = Botkit.slackbot({
-  debug: false,
-});
+  storage: mongoStorage,
+}).configureSlackApp(
+  {
+    clientId: connectionInfo.slackClientID,
+    clientSecret: connectionInfo.slackClientSecret,
+    scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
+  },
+);
 
-const hazel = controller.spawn({
-  token: connectionInfo.slackToken,
-});
-
-let startCount = 0;
-
-function startHazel() {
-  if (startCount >= 10) {
-    winston.log('error', 'Something went wrong. Hazel tried 10 times to connect to Slack without success.');
-    process.exit();
-  }
-  hazel.startRTM((err) => {
+controller.setupWebserver(process.env.PORT, () => {
+  controller.createWebhookEndpoints(controller.webserver);
+  controller.createHomepageEndpoint(controller.webserver);
+  controller.createOauthEndpoints(controller.webserver, (err, req, res) => {
     if (err) {
-      winston.log('warning', 'Hazel could not connect to Slack. Retrying in 10 seconds...');
-      setTimeout(() => {
-        winston.log('info', '10 seconds are up. Retrying...');
-        startCount += 1;
-        winston.log('warning', `Have tried getting Hazel up and going ${startCount} times now.`);
-        startHazel();
-      }, 10000);
+      res.status(500).send(`ERROR: ${err}`);
     } else {
-      winston.log('info', 'Hazel is connected to Slack!');
-      startCount = 0;
+      res.send('Success!');
     }
   });
+});
+
+
+// just a simple way to make sure we don't
+// connect to the RTM twice for the same team
+const activeBots = {};
+function trackBot(bot) {
+  activeBots[bot.config.token] = bot;
 }
 
-startHazel();
+controller.on('create_bot', (bot) => {
+  if (activeBots[bot.config.token]) {
+    // already online! do nothing.
+  } else {
+    bot.startRTM((err) => {
+      if (!err) {
+        trackBot(bot);
+      }
+    });
+  }
+});
 
+controller.storage.teams.all((err, teams) => {
+  if (err) {
+    throw new Error(err);
+  }
+  // connect all teams with bots up to slack!
+  Object.keys(teams).forEach((t) => {
+    if (teams[t].bot) {
+      controller.spawn(teams[t]).startRTM((startErr, bot) => {
+        if (startErr) {
+          winston.log('error', 'Could not connect to Slack RTM.');
+        } else {
+          trackBot(bot);
+        }
+      });
+    }
+  });
+});
+controller.on('rtm_open', () => {
+  winston.log('info', '** The RTM api just connected!');
+});
+controller.on('rtm_close', (bot) => {
+  winston.log('warn', '** The RTM api just closed');
+  bot.startRTM((err) => {
+    if (!err) {
+      trackBot(bot);
+    }
+  });
+});
 
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
@@ -131,10 +165,4 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
 controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, message) => {
   winston.log('info', 'Hazel heard someone mention her directly. Sending reply...');
   bot.reply(message, quotes.getRandomQuote());
-});
-
-controller.on('rtm_close', () => {
-  winston.log('warning', 'Hazel somehow lost connection to Slack. Going to try to connect again.');
-  startCount += 1;
-  startHazel();
 });

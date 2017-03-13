@@ -62,58 +62,70 @@ startHazel();
 
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
-  const ticketID = message.match[1];
-  if (process.env.ticketSystemAPIKey) {
-    bot.startTyping(message);
-    winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
-    const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
-    request(reqOptions, (err, res, body) => {
-      winston.log('debug', 'Just sent request to FreshService.');
-      if (err || res.statusCode !== 200) {
-        winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
-        bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
+  bot.api.channels.info({ channel: message.channel }, (err, info) => {
+    if (err) {
+      winston.log('error', 'Hazel could not get channel info.');
+    } else {
+      winston.log('debug', 'Hazel got the channel info.');
+      if (info.channel.name === 'emg') {
+        winston.log('info', 'We are in the EMG channel.');
+        // do emg stuff here
       } else {
-        winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
-        const ticketInfoMessage = {
-          attachments: [{
-            title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
-            title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
-            fields: [
-              {
-                title: 'Description',
-                value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
-                short: false,
-              },
-              {
-                title: 'Requester',
-                value: body.helpdesk_ticket.requester_name,
-                short: true,
-              },
-              {
-                title: 'Agent',
-                value: body.helpdesk_ticket.responder_name,
-                short: true,
-              },
-              {
-                title: 'Status',
-                value: body.helpdesk_ticket.status_name,
-                short: true,
-              },
-              {
-                title: 'Priority',
-                value: body.helpdesk_ticket.priority_name,
-                short: true,
-              },
-            ],
-          }],
-        };
-        bot.reply(message, ticketInfoMessage);
+        const ticketID = message.match[1];
+        if (process.env.ticketSystemAPIKey) {
+          bot.startTyping(message);
+          winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
+          const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
+          request(reqOptions, (reqErr, res, body) => {
+            winston.log('debug', 'Just sent request to FreshService.');
+            if (err || res.statusCode !== 200) {
+              winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
+              bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
+            } else {
+              winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
+              const ticketInfoMessage = {
+                attachments: [{
+                  title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
+                  title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+                  fields: [
+                    {
+                      title: 'Description',
+                      value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
+                      short: false,
+                    },
+                    {
+                      title: 'Requester',
+                      value: body.helpdesk_ticket.requester_name,
+                      short: true,
+                    },
+                    {
+                      title: 'Agent',
+                      value: body.helpdesk_ticket.responder_name,
+                      short: true,
+                    },
+                    {
+                      title: 'Status',
+                      value: body.helpdesk_ticket.status_name,
+                      short: true,
+                    },
+                    {
+                      title: 'Priority',
+                      value: body.helpdesk_ticket.priority_name,
+                      short: true,
+                    },
+                  ],
+                }],
+              };
+              bot.reply(message, ticketInfoMessage);
+            }
+          });
+        } else {
+          winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
+          bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
+        }
       }
-    });
-  } else {
-    winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
-    bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
-  }
+    }
+  });
 });
 
 controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, message) => {

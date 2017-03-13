@@ -25,13 +25,11 @@ const connectionInfo = {
 };
 const controller = Botkit.slackbot({
   storage: mongoStorage,
-}).configureSlackApp(
-  {
-    clientId: connectionInfo.slackClientID,
-    clientSecret: connectionInfo.slackClientSecret,
-    scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
-  },
-);
+}).configureSlackApp({
+  clientId: connectionInfo.slackClientID,
+  clientSecret: connectionInfo.slackClientSecret,
+  scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
+});
 
 controller.setupWebserver(process.env.PORT, () => {
   controller.createWebhookEndpoints(controller.webserver);

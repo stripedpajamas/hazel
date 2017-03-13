@@ -64,6 +64,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
   const ticketID = message.match[1];
   if (process.env.ticketSystemAPIKey) {
+    bot.startTyping(message);
     winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
     const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
     request(reqOptions, (err, res, body) => {

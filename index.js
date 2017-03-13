@@ -112,10 +112,16 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
             winston.log('debug', 'Just sent request to FreshService.');
             if (err || res.statusCode !== 200) {
               winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
-              bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
+              bot.reply(message, {
+                text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+                username: 'hazel',
+                icon_emoji: ':octopus:',
+              });
             } else {
               winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
               const ticketInfoMessage = {
+                username: 'hazel',
+                icon_emoji: ':octopus:',
                 attachments: [{
                   title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
                   title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
@@ -153,7 +159,11 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
           });
         } else {
           winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
-          bot.reply(message, url.resolve(connectionInfo.ticketSystemUrl, ticketID));
+          bot.reply(message, {
+            text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+            username: 'hazel',
+            icon_emoji: ':octopus:',
+          });
         }
       }
     }
@@ -162,5 +172,9 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
 
 controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, message) => {
   winston.log('info', 'Hazel heard someone mention her directly. Sending reply...');
-  bot.reply(message, quotes.getRandomQuote());
+  bot.reply(message, {
+    username: 'hazel',
+    icon_emoji: ':octopus:',
+    text: quotes.getRandomQuote(),
+  });
 });

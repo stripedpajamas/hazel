@@ -28,7 +28,7 @@ const controller = Botkit.slackbot({
 }).configureSlackApp({
   clientId: connectionInfo.slackClientID,
   clientSecret: connectionInfo.slackClientSecret,
-  scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
+  scopes: ['bot', 'chat:write:bot', 'chat:write:user', 'users:read', 'channels:read'],
 });
 
 controller.setupWebserver(process.env.PORT, () => {
@@ -92,6 +92,8 @@ controller.on('rtm_close', (bot) => {
   });
 });
 
+
+// *** Begin Ticket Info/Link Handler *** //
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
   bot.api.channels.info({ channel: message.channel }, (err, info) => {
@@ -100,8 +102,32 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
     } else {
       winston.log('debug', 'Hazel got the channel info.');
       if (info.channel.name === 'emg') {
-        winston.log('info', 'We are in the EMG channel.');
-        // do emg stuff here
+        winston.log('info', 'We are in the EMG channel. Sending buttons...');
+        const emgTicketReply = {
+          username: 'hazel',
+          icon_emoji: ':octopus:',
+          text: "On Call Tech: Let everyone know you're taking care of it, and escalate if you need to:",
+          attachments: [
+            {
+              fallback: "(Sorry. I couldn't make the cool buttons this time.)",
+              callback_id: 'emgResponse',
+              actions: [
+                {
+                  name: 'acceptEmg',
+                  text: "I've got it.",
+                  style: 'primary',
+                  type: 'button',
+                },
+                {
+                  name: 'escalateEmg',
+                  text: 'I need to escalate!',
+                  type: 'button',
+                },
+              ],
+            },
+          ],
+        };
+        bot.reply(message, emgTicketReply);
       } else {
         const ticketID = message.match[1];
         if (process.env.ticketSystemAPIKey) {
@@ -169,7 +195,9 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
     }
   });
 });
+// *** End Ticket Info/Link Handler *** //
 
+// *** Begin Quote Handler *** //
 controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, message) => {
   winston.log('info', 'Hazel heard someone mention her directly. Sending reply...');
   bot.reply(message, {
@@ -178,3 +206,26 @@ controller.hears(['quote', 'proverb', 'wisdom'], ['direct_mention'], (bot, messa
     text: quotes.getRandomQuote(),
   });
 });
+// *** End Quote Handler *** //
+
+// *** Begin EMG Buttons Handler *** //
+controller.on('interactive_message_callback', (bot, message) => {
+  bot.api.users.info({ user: message.user }, (err, info) => {
+    let buttonPresser = null;
+    if (err) {
+      winston.log('error', 'Could not get user name of button presser');
+    } else {
+      buttonPresser = info.user.name;
+    }
+    const emgReply = {
+      text: `@everyone ${buttonPresser || 'A tech'} is taking care of this emg.`,
+      username: 'hazel',
+      icon_emoji: ':octopus:',
+    };
+    if (message.actions[0].name === 'acceptEmg') {
+      bot.reply(message, emgReply);
+    }
+    // Put logic here if escalation is requested //
+  });
+});
+// *** End EMG Buttons Handler *** //

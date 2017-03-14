@@ -219,6 +219,24 @@ controller.on('interactive_message_callback', (bot, message) => {
       buttonPresser = info.user.name;
     }
     if (message.actions[0].name === 'acceptEmg') {
+      bot.replyInteractive(message, {
+        username: 'hazel',
+        icon_emoji: ':octopus:',
+        text: message.original_message.text,
+        attachments: [
+          {
+            fallback: "(Sorry. I couldn't make the cool buttons this time.)",
+            callback_id: 'emgResponse',
+            actions: [
+              {
+                name: 'escalateEmg',
+                text: 'I need to escalate!',
+                type: 'button',
+              },
+            ],
+          },
+        ],
+      });
       bot.reply(message, {
         text: `<!everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
         username: 'hazel',

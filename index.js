@@ -218,7 +218,7 @@ controller.on('interactive_message_callback', (bot, message) => {
       buttonPresser = info.user.name;
     }
     const emgReply = {
-      text: `<@everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
+      text: `<!everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
       username: 'hazel',
       icon_emoji: ':octopus:',
     };

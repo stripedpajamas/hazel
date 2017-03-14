@@ -5,7 +5,8 @@
 const winston = require('winston');
 
 if (!process.env.slackClientID || !process.env.slackClientSecret ||
-  !process.env.ticketSystemUrl || !process.env.PORT || !process.env.mongoUri) {
+  !process.env.ticketSystemUrl || !process.env.PORT || !process.env.mongoUri ||
+  !process.env.escalationTeam) {
   winston.log('error', 'Please see README for required env vars.');
   process.exit();
 }
@@ -237,11 +238,11 @@ controller.on('interactive_message_callback', (bot, message) => {
           },
         ],
       });
-      const escalationTeam = ['peter']; // move this into an env var later
+      const escalationTeam = process.env.escalationTeam.split(/,\s?/);
       escalationTeam.forEach((person) => {
         bot.say({
           username: 'hazel',
-          icon_emoji: 'octopus',
+          icon_emoji: ':octopus:',
           channel: `@${person}`,
           text: `${buttonPresser || 'The On Call Tech'} needs to escalate the emergency.`,
         });

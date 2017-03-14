@@ -28,7 +28,7 @@ const controller = Botkit.slackbot({
 }).configureSlackApp({
   clientId: connectionInfo.slackClientID,
   clientSecret: connectionInfo.slackClientSecret,
-  scopes: ['bot', 'chat:write:bot', 'chat:write:user', 'users:read', 'channels:read'],
+  scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
 });
 
 controller.setupWebserver(process.env.PORT, () => {
@@ -218,7 +218,7 @@ controller.on('interactive_message_callback', (bot, message) => {
       buttonPresser = info.user.name;
     }
     const emgReply = {
-      text: `@everyone ${buttonPresser || 'A tech'} is taking care of this emg.`,
+      text: `<@everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
       username: 'hazel',
       icon_emoji: ':octopus:',
     };

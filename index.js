@@ -233,6 +233,7 @@ controller.on('interactive_message_callback', (bot, message) => {
           {
             fallback: 'Tech needs to escalate!',
             text: '*Message sent to the escalation team for help.*',
+            mrkdwn_in: ['text'],
           },
         ],
       });

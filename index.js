@@ -217,15 +217,26 @@ controller.on('interactive_message_callback', (bot, message) => {
     } else {
       buttonPresser = info.user.name;
     }
-    const emgReply = {
-      text: `<!everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
-      username: 'hazel',
-      icon_emoji: ':octopus:',
-    };
     if (message.actions[0].name === 'acceptEmg') {
-      bot.reply(message, emgReply);
+      bot.reply(message, {
+        text: `<!everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
+        username: 'hazel',
+        icon_emoji: ':octopus:',
+      });
     }
-    // Put logic here if escalation is requested //
+    if (message.actions[0].name === 'escalateEmg') {
+      bot.replyInteractive(message, {
+        username: 'hazel',
+        icon_emoji: ':octopus:',
+        text: message.original_message.text,
+        attachments: [
+          {
+            fallback: 'Tech needs to escalate!',
+            text: '*Message sent to the escalation team for help.*',
+          },
+        ],
+      });
+    }
   });
 });
 // *** End EMG Buttons Handler *** //

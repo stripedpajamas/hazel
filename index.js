@@ -237,6 +237,15 @@ controller.on('interactive_message_callback', (bot, message) => {
           },
         ],
       });
+      const escalationTeam = ['peter']; // move this into an env var later
+      escalationTeam.forEach((person) => {
+        bot.say({
+          username: 'hazel',
+          icon_emoji: 'octopus',
+          channel: `@${person}`,
+          text: `${buttonPresser || 'The On Call Tech'} needs to escalate the emergency.`,
+        });
+      });
     }
   });
 });

@@ -150,6 +150,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
                 username: 'hazel',
                 icon_emoji: ':octopus:',
                 attachments: [{
+                  fallback: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
                   title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
                   title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
                   fields: [

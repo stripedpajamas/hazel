@@ -158,6 +158,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
                       value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
                       short: false,
                     },
+                    /*
                     {
                       title: 'Requester',
                       value: body.helpdesk_ticket.requester_name,
@@ -178,6 +179,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
                       value: body.helpdesk_ticket.priority_name,
                       short: true,
                     },
+                    */
                   ],
                 }],
               };

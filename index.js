@@ -183,7 +183,6 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
                   ],
                 }],
               };
-              bot.stopTyping(message);
               bot.reply(message, ticketInfoMessage);
             }
           });

@@ -130,7 +130,8 @@ controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
         };
         bot.reply(message, emgTicketReply);
       }
-  }
+    }
+  });
 });
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
@@ -141,7 +142,7 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
     const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
     request(reqOptions, (reqErr, res, body) => {
       winston.log('debug', 'Just sent request to FreshService.');
-      if (err || res.statusCode !== 200) {
+      if (reqErr || res.statusCode !== 200) {
         winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
         bot.reply(message, {
           text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),

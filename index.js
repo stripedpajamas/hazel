@@ -95,8 +95,8 @@ controller.on('rtm_close', (bot) => {
 
 
 // *** Begin Ticket Info/Link Handler *** //
-controller.hears(['ticket ([0-9]+)', 'New emergency VM:'], ['ambient'], (bot, message) => {
-  winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
+controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
+  winston.log('info', 'Heard some emergency VM stuff. Confirming what channel she is in.');
   bot.api.channels.info({ channel: message.channel }, (err, info) => {
     if (err) {
       winston.log('error', 'Hazel could not get channel info.');
@@ -110,7 +110,7 @@ controller.hears(['ticket ([0-9]+)', 'New emergency VM:'], ['ambient'], (bot, me
           text: "On Call Tech: Let everyone know you're taking care of it, and escalate if you need to:",
           attachments: [
             {
-              fallback: "(Sorry. I couldn't make the cool buttons this time.)",
+              fallback: "Tell everyone you're on it!",
               callback_id: 'emgResponse',
               actions: [
                 {
@@ -129,53 +129,54 @@ controller.hears(['ticket ([0-9]+)', 'New emergency VM:'], ['ambient'], (bot, me
           ],
         };
         bot.reply(message, emgTicketReply);
-      } else {
-        const ticketID = message.match[1];
-        if (process.env.ticketSystemAPIKey) {
-          bot.startTyping(message);
-          winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
-          const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
-          request(reqOptions, (reqErr, res, body) => {
-            winston.log('debug', 'Just sent request to FreshService.');
-            if (err || res.statusCode !== 200) {
-              winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
-              bot.reply(message, {
-                text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
-                username: 'hazel',
-                icon_emoji: ':octopus:',
-              });
-            } else {
-              winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
-              const ticketInfoMessage = {
-                username: 'hazel',
-                icon_emoji: ':octopus:',
-                attachments: [{
-                  fallback: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
-                  title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
-                  title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
-                  fields: [
-                    {
-                      title: 'Description',
-                      value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
-                      short: false,
-                    },
-                  ],
-                }],
-              };
-              bot.reply(message, ticketInfoMessage);
-            }
-          });
-        } else {
-          winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
-          bot.reply(message, {
-            text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
-            username: 'hazel',
-            icon_emoji: ':octopus:',
-          });
-        }
       }
-    }
-  });
+  }
+});
+controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
+  winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
+  const ticketID = message.match[1];
+  if (process.env.ticketSystemAPIKey) {
+    bot.startTyping(message);
+    winston.log('info', 'Looks like an API key for FreshService was provided. Will try to get ticket info...');
+    const reqOptions = freshservice(connectionInfo.ticketSystemUrl, connectionInfo.ticketSystemAPIKey, 'GET', `${ticketID}.json`);
+    request(reqOptions, (reqErr, res, body) => {
+      winston.log('debug', 'Just sent request to FreshService.');
+      if (err || res.statusCode !== 200) {
+        winston.log('warning', 'Hazel could not get ticket info from FreshService. Sending link instead...');
+        bot.reply(message, {
+          text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+          username: 'hazel',
+          icon_emoji: ':octopus:',
+        });
+      } else {
+        winston.log('debug', 'Got a good response from FreshService. Sending ticket stub...');
+        const ticketInfoMessage = {
+          username: 'hazel',
+          icon_emoji: ':octopus:',
+          attachments: [{
+            fallback: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+            title: `Ticket ${ticketID}: ${body.helpdesk_ticket.subject}`,
+            title_link: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+            fields: [
+              {
+                title: 'Description',
+                value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
+                short: false,
+              },
+            ],
+          }],
+        };
+        bot.reply(message, ticketInfoMessage);
+      }
+    });
+  } else {
+    winston.log('info', 'No API key provided, so just sending the URL to the ticket...');
+    bot.reply(message, {
+      text: url.resolve(connectionInfo.ticketSystemUrl, ticketID),
+      username: 'hazel',
+      icon_emoji: ':octopus:',
+    });
+  }
 });
 // *** End Ticket Info/Link Handler *** //
 

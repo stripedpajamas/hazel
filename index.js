@@ -103,7 +103,7 @@ controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
       winston.log('error', 'Hazel could not get channel info.');
     } else {
       winston.log('debug', 'Hazel got the channel info.');
-      if (info.channel.name === 'emg') {
+      if (info.channel.name === 'emg' || info.channel.name === '273') {
         winston.log('info', 'We are in the EMG channel. Sending buttons...');
         const emgTicketReply = {
           username: 'hazel',

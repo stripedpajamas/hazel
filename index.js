@@ -30,6 +30,7 @@ const controller = Botkit.slackbot({
   clientId: connectionInfo.slackClientID,
   clientSecret: connectionInfo.slackClientSecret,
   scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
+  debug: true,
 });
 
 controller.setupWebserver(process.env.PORT, () => {

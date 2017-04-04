@@ -95,7 +95,7 @@ controller.on('rtm_close', (bot) => {
 
 
 // *** Begin Ticket Info/Link Handler *** //
-controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
+controller.hears(['ticket ([0-9]+)', 'New emergency VM:'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');
   bot.api.channels.info({ channel: message.channel }, (err, info) => {
     if (err) {
@@ -159,28 +159,6 @@ controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
                       value: `${body.helpdesk_ticket.description.substring(0, 300)}...`,
                       short: false,
                     },
-                    /*
-                    {
-                      title: 'Requester',
-                      value: body.helpdesk_ticket.requester_name,
-                      short: true,
-                    },
-                    {
-                      title: 'Agent',
-                      value: body.helpdesk_ticket.responder_name,
-                      short: true,
-                    },
-                    {
-                      title: 'Status',
-                      value: body.helpdesk_ticket.status_name,
-                      short: true,
-                    },
-                    {
-                      title: 'Priority',
-                      value: body.helpdesk_ticket.priority_name,
-                      short: true,
-                    },
-                    */
                   ],
                 }],
               };

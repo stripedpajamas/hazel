@@ -96,9 +96,9 @@ controller.on('rtm_close', (bot) => {
 
 
 // *** Begin Ticket Info/Link Handler *** //
-controller.on('bot_message', (bot, message) {
+controller.on('bot_message', (bot, message) => {
   winston.log('info', message);
-})
+});
 controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
   winston.log('info', 'Heard some emergency VM stuff. Confirming what channel she is in.');
   bot.api.channels.info({ channel: message.channel }, (err, info) => {

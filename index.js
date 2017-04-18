@@ -26,7 +26,7 @@ const connectionInfo = {
 };
 const controller = Botkit.slackbot({
   storage: mongoStorage,
-  debug: true,
+  debug: false,
 }).configureSlackApp({
   clientId: connectionInfo.slackClientID,
   clientSecret: connectionInfo.slackClientSecret,
@@ -97,45 +97,44 @@ controller.on('rtm_close', (bot) => {
 
 // *** Begin Ticket Info/Link Handler *** //
 controller.on('bot_message', (bot, message) => {
-  winston.log('info', message);
-});
-controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
-  winston.log('info', 'Heard some emergency VM stuff. Confirming what channel she is in.');
-  bot.api.channels.info({ channel: message.channel }, (err, info) => {
-    if (err) {
-      winston.log('error', 'Hazel could not get channel info.');
-    } else {
-      winston.log('debug', 'Hazel got the channel info.');
-      if (info.channel.name === 'emg' || info.channel.name === '273') {
-        winston.log('info', 'We are in the EMG channel. Sending buttons...');
-        const emgTicketReply = {
-          username: 'hazel',
-          icon_emoji: ':octopus:',
-          text: "On Call Tech: Let everyone know you're taking care of it, and escalate if you need to:",
-          attachments: [
-            {
-              fallback: "Tell everyone you're on it!",
-              callback_id: 'emgResponse',
-              actions: [
-                {
-                  name: 'acceptEmg',
-                  text: "I've got it.",
-                  style: 'primary',
-                  type: 'button',
-                },
-                {
-                  name: 'escalateEmg',
-                  text: 'I need to escalate!',
-                  type: 'button',
-                },
-              ],
-            },
-          ],
-        };
-        bot.reply(message, emgTicketReply);
+  if (message.text.includes('New emergency VM')) {
+    winston.log('info', 'Heard some emergency VM stuff. Confirming what channel she is in.');
+    bot.api.channels.info({ channel: message.channel }, (err, info) => {
+      if (err) {
+        winston.log('error', 'Hazel could not get channel info.');
+      } else {
+        winston.log('debug', 'Hazel got the channel info.');
+        if (info.channel.name === 'emg' || info.channel.name === '273') {
+          winston.log('info', 'We are in the EMG channel. Sending buttons...');
+          const emgTicketReply = {
+            username: 'hazel',
+            icon_emoji: ':octopus:',
+            text: "On Call Tech: Let everyone know you're taking care of it, and escalate if you need to:",
+            attachments: [
+              {
+                fallback: "Tell everyone you're on it!",
+                callback_id: 'emgResponse',
+                actions: [
+                  {
+                    name: 'acceptEmg',
+                    text: "I've got it.",
+                    style: 'primary',
+                    type: 'button',
+                  },
+                  {
+                    name: 'escalateEmg',
+                    text: 'I need to escalate!',
+                    type: 'button',
+                  },
+                ],
+              },
+            ],
+          };
+          bot.reply(message, emgTicketReply);
+        }
       }
-    }
-  });
+    });
+  }
 });
 controller.hears(['ticket ([0-9]+)'], ['ambient'], (bot, message) => {
   winston.log('info', 'Hazel heard a ticket # pattern. Crafting reply...');

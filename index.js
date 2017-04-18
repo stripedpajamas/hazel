@@ -26,11 +26,11 @@ const connectionInfo = {
 };
 const controller = Botkit.slackbot({
   storage: mongoStorage,
+  debug: true,
 }).configureSlackApp({
   clientId: connectionInfo.slackClientID,
   clientSecret: connectionInfo.slackClientSecret,
   scopes: ['bot', 'chat:write:bot', 'users:read', 'channels:read'],
-  debug: true,
 });
 
 controller.setupWebserver(process.env.PORT, () => {
@@ -96,10 +96,6 @@ controller.on('rtm_close', (bot) => {
 
 
 // *** Begin Ticket Info/Link Handler *** //
-
-controller.on('message_received', (bot, message) => {
-  winston.log('info', message);
-});
 controller.hears(['New emergency VM:'], ['ambient'], (bot, message) => {
   winston.log('info', 'Heard some emergency VM stuff. Confirming what channel she is in.');
   bot.api.channels.info({ channel: message.channel }, (err, info) => {

@@ -224,7 +224,7 @@ controller.on('interactive_message_callback', (bot, message) => {
         ],
       });
       bot.reply(message, {
-        text: `<!everyone> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
+        text: `<!eng> ${buttonPresser || 'A tech'} is taking care of this emergency.`,
         username: 'hazel',
         icon_emoji: ':octopus:',
       });
